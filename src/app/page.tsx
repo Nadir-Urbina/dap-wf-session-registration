@@ -131,7 +131,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-black text-[#FFD600] p-4 sticky top-0 z-10 shadow-md">
-        <div className="text-xs font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
+        <div className="text-2xl font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
         <h1 className="text-xl font-bold text-center">{data.eventTitle}</h1>
         <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
       </header>
