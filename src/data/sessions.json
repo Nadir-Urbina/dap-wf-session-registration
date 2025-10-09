@@ -7,13 +7,6 @@
       "time": "10:15 AM",
       "employees": [
         {
-          "fullName": "Nadir Urbina Brooks",
-          "email": "naub_2@hotmail.com",
-          "phone": "(904) 254-2962",
-          "primaryLanguage": "English",
-          "id": "emp-1760018997774-xt1m17po2"
-        },
-        {
           "fullName": "Cameron Audran",
           "email": "caudran@duvalasphalt.com",
           "phone": "(904) 719-5275",
