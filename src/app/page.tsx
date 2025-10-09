@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Session, SessionsData, Employee } from '@/types';
+import { SessionsData, Employee } from '@/types';
 import SessionCard from '@/components/SessionCard';
 import EmployeeForm from '@/components/EmployeeForm';
 
@@ -130,9 +130,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-md">
+      <header className="bg-black text-[#FFD600] p-4 sticky top-0 z-10 shadow-md">
+        <div className="text-xs font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
         <h1 className="text-xl font-bold text-center">{data.eventTitle}</h1>
-        <p className="text-sm text-center mt-1 opacity-90">{data.eventDate}</p>
+        <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
       </header>
 
       {/* Main Content */}

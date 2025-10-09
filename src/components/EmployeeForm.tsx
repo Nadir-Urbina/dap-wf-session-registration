@@ -112,7 +112,7 @@ export default function EmployeeForm({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-[#FFD600] ${
                 errors.fullName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="John Doe"
@@ -137,7 +137,7 @@ export default function EmployeeForm({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-[#FFD600] ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="john.doe@example.com"
@@ -160,7 +160,7 @@ export default function EmployeeForm({
               id="phone"
               value={formData.phone}
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-[#FFD600] ${
                 errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="(555) 123-4567"
@@ -188,7 +188,7 @@ export default function EmployeeForm({
                   primaryLanguage: e.target.value as 'English' | 'Spanish',
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-[#FFD600]"
             >
               <option value="English">English</option>
               <option value="Spanish">Spanish</option>
@@ -206,7 +206,7 @@ export default function EmployeeForm({
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 font-medium"
+              className="flex-1 px-4 py-2 bg-black text-[#FFD600] rounded-lg hover:bg-gray-900 active:bg-gray-800 font-medium"
             >
               {employee ? 'Update' : 'Add'}
             </button>

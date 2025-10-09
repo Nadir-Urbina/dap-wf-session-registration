@@ -40,7 +40,7 @@ export async function POST(
     await writeSessionsData(data);
 
     return NextResponse.json(newEmployee, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to add employee' },
       { status: 500 }

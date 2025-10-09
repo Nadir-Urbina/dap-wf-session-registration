@@ -75,7 +75,7 @@ export default function SessionCard({
                 {session.employees.length}/{session.maxCapacity} registered
               </span>
               {hasSpanishSpeakers && (
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                <span className="text-xs bg-[#FFD600] text-black px-2 py-1 rounded font-medium">
                   🌐 Translator needed
                 </span>
               )}
@@ -91,7 +91,7 @@ export default function SessionCard({
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 isFull
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+                  : 'bg-black text-[#FFD600] hover:bg-gray-900 active:bg-gray-800'
               }`}
             >
               {isFull ? 'Full' : '+ Add'}
@@ -128,7 +128,7 @@ export default function SessionCard({
               <div className="p-4 bg-gray-50 border-b border-gray-200 flex gap-3">
                 <a
                   href={generateEmailLink()}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 font-medium text-sm text-center flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-black text-[#FFD600] rounded-lg hover:bg-gray-900 active:bg-gray-800 font-medium text-sm text-center flex items-center justify-center gap-2"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <svg
@@ -148,7 +148,7 @@ export default function SessionCard({
                 </a>
                 <button
                   onClick={copyPhoneNumbers}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 font-medium text-sm text-center flex items-center justify-center gap-2 relative"
+                  className="flex-1 px-4 py-2 bg-[#FFD600] text-black rounded-lg hover:bg-[#FFD600]/90 active:bg-[#FFD600]/80 font-medium text-sm text-center flex items-center justify-center gap-2 relative"
                 >
                   {showCopiedMessage ? (
                     <>

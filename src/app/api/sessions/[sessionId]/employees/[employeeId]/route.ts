@@ -41,7 +41,7 @@ export async function PUT(
     await writeSessionsData(data);
 
     return NextResponse.json(session.employees[employeeIndex]);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to update employee' },
       { status: 500 }
@@ -79,7 +79,7 @@ export async function DELETE(
     await writeSessionsData(data);
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to delete employee' },
       { status: 500 }
