@@ -1,0 +1,63 @@
+{
+  "eventDate": "November 8, 2025",
+  "eventTitle": "Employee Benefits",
+  "sessions": [
+    {
+      "id": "session-1015",
+      "time": "10:15 AM",
+      "employees": [
+        {
+          "fullName": "Nadir Urbina Brooks",
+          "email": "naub_2@hotmail.com",
+          "phone": "(904) 254-2962",
+          "primaryLanguage": "English",
+          "id": "emp-1760018997774-xt1m17po2"
+        },
+        {
+          "fullName": "Cameron Audran",
+          "email": "caudran@duvalasphalt.com",
+          "phone": "(904) 719-5275",
+          "primaryLanguage": "English",
+          "id": "emp-1760019030697-uzjqi1cs2"
+        }
+      ],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-1045",
+      "time": "10:45 AM",
+      "employees": [],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-1115",
+      "time": "11:15 AM",
+      "employees": [],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-1145",
+      "time": "11:45 AM",
+      "employees": [],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-1215",
+      "time": "12:15 PM",
+      "employees": [],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-1245",
+      "time": "12:45 PM",
+      "employees": [],
+      "maxCapacity": 10
+    },
+    {
+      "id": "session-115",
+      "time": "1:15 PM",
+      "employees": [],
+      "maxCapacity": 10
+    }
+  ]
+}

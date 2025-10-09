@@ -1,0 +1,237 @@
+'use client';
+
+import { useState } from 'react';
+import { Session, Employee } from '@/types';
+
+interface SessionCardProps {
+  session: Session;
+  onAddEmployee: () => void;
+  onEditEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string) => void;
+}
+
+export default function SessionCard({
+  session,
+  onAddEmployee,
+  onEditEmployee,
+  onDeleteEmployee,
+}: SessionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+
+  const isFull = session.employees.length >= session.maxCapacity;
+  const hasSpanishSpeakers = session.employees.some(
+    (emp) => emp.primaryLanguage === 'Spanish'
+  );
+
+  const getCapacityColor = () => {
+    const percentage = (session.employees.length / session.maxCapacity) * 100;
+    if (percentage >= 100) return 'text-red-600';
+    if (percentage >= 75) return 'text-orange-600';
+    return 'text-green-600';
+  };
+
+  const generateEmailLink = () => {
+    const emails = session.employees.map(emp => emp.email).join(',');
+    const subject = encodeURIComponent('Employee Benefits Session - Starting Soon');
+    const body = encodeURIComponent(
+      `Hello,\n\nYour Employee Benefits information session is starting soon!\n\n` +
+      `Session Time: ${session.time}\n` +
+      `Date: November 8, 2025\n\n` +
+      `Please arrive a few minutes early. We look forward to seeing you!\n\n` +
+      `Best regards,\nEvent Team`
+    );
+    return `mailto:${emails}?subject=${subject}&body=${body}`;
+  };
+
+  const copyPhoneNumbers = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Get all phone numbers formatted nicely
+    const phoneNumbers = session.employees.map(emp => emp.phone).join(', ');
+
+    try {
+      await navigator.clipboard.writeText(phoneNumbers);
+      setShowCopiedMessage(true);
+      setTimeout(() => setShowCopiedMessage(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy phone numbers:', error);
+      alert('Failed to copy phone numbers');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Session Header */}
+      <div
+        className="p-4 cursor-pointer active:bg-gray-50"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">{session.time}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`font-semibold ${getCapacityColor()}`}>
+                {session.employees.length}/{session.maxCapacity} registered
+              </span>
+              {hasSpanishSpeakers && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                  🌐 Translator needed
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddEmployee();
+              }}
+              disabled={isFull}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                isFull
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+              }`}
+            >
+              {isFull ? 'Full' : '+ Add'}
+            </button>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded Employee List */}
+      {isExpanded && (
+        <div className="border-t border-gray-200">
+          {session.employees.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              No employees registered yet
+            </div>
+          ) : (
+            <>
+              {/* Notification Buttons */}
+              <div className="p-4 bg-gray-50 border-b border-gray-200 flex gap-3">
+                <a
+                  href={generateEmailLink()}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 font-medium text-sm text-center flex items-center justify-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Send Email
+                </a>
+                <button
+                  onClick={copyPhoneNumbers}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 font-medium text-sm text-center flex items-center justify-center gap-2 relative"
+                >
+                  {showCopiedMessage ? (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                        />
+                      </svg>
+                      Copy Phones
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Employee List */}
+              <div className="divide-y divide-gray-100">
+                {session.employees.map((employee) => (
+                <div
+                  key={employee.id}
+                  className="p-4 hover:bg-gray-50"
+                >
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-800 truncate">
+                        {employee.fullName}
+                      </h3>
+                      <p className="text-sm text-gray-600 truncate">
+                        {employee.email}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {employee.phone}
+                      </p>
+                      <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                        {employee.primaryLanguage}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => onEditEmployee(employee)}
+                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 active:bg-gray-300"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDeleteEmployee(employee.id)}
+                        className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 active:bg-red-300"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
