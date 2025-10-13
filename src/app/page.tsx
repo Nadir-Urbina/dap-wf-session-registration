@@ -152,9 +152,10 @@ export default function Home() {
       </main>
 
       {/* Employee Form Modal */}
-      {showForm && (
+      {showForm && selectedSession && (
         <EmployeeForm
           employee={editingEmployee}
+          session={data?.sessions.find(s => s.id === selectedSession) || null}
           onSubmit={handleFormSubmit}
           onCancel={handleFormCancel}
         />

@@ -11,6 +11,7 @@ export interface Session {
   time: string;
   employees: Employee[];
   maxCapacity: number;
+  spanishOnly?: boolean;
 }
 
 export interface SessionsData {

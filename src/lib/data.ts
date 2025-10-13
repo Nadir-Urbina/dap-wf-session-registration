@@ -42,13 +42,15 @@ const initialData: SessionsData = {
       id: "session-1245",
       time: "12:45 PM",
       employees: [],
-      maxCapacity: 10
+      maxCapacity: 10,
+      spanishOnly: true
     },
     {
       id: "session-115",
       time: "1:15 PM",
       employees: [],
-      maxCapacity: 10
+      maxCapacity: 10,
+      spanishOnly: true
     }
   ]
 };

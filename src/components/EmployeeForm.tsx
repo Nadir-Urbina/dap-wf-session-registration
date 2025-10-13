@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Employee } from '@/types';
+import { Employee, Session } from '@/types';
 
 interface EmployeeFormProps {
   employee: Employee | null;
+  session: Session | null;
   onSubmit: (employeeData: Omit<Employee, 'id'>) => void;
   onCancel: () => void;
 }
 
 export default function EmployeeForm({
   employee,
+  session,
   onSubmit,
   onCancel,
 }: EmployeeFormProps) {
@@ -22,6 +24,7 @@ export default function EmployeeForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showLanguageWarning, setShowLanguageWarning] = useState(false);
 
   useEffect(() => {
     if (employee) {
@@ -51,6 +54,17 @@ export default function EmployeeForm({
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhoneNumber(value);
     setFormData({ ...formData, phone: formatted });
+  };
+
+  const handleLanguageChange = (language: 'English' | 'Spanish') => {
+    setFormData({ ...formData, primaryLanguage: language });
+
+    // Show warning if Spanish is selected in English-only session
+    if (language === 'Spanish' && session && !session.spanishOnly) {
+      setShowLanguageWarning(true);
+    } else {
+      setShowLanguageWarning(false);
+    }
   };
 
   const validateForm = () => {
@@ -183,16 +197,25 @@ export default function EmployeeForm({
               id="primaryLanguage"
               value={formData.primaryLanguage}
               onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  primaryLanguage: e.target.value as 'English' | 'Spanish',
-                })
+                handleLanguageChange(e.target.value as 'English' | 'Spanish')
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-[#FFD600]"
             >
               <option value="English">English</option>
               <option value="Spanish">Spanish</option>
             </select>
+
+            {/* Warning for Spanish selection in English-only sessions */}
+            {showLanguageWarning && (
+              <div className="mt-2 p-3 bg-orange-50 border border-orange-300 rounded-lg">
+                <p className="text-sm text-orange-800 font-medium">
+                  ⚠️ Translation is not available for this session
+                </p>
+                <p className="text-xs text-orange-700 mt-1">
+                  Only the last 2 sessions (12:45 PM & 1:15 PM) will have Spanish translation available.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Buttons */}

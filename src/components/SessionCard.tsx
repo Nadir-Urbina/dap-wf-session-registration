@@ -62,6 +62,17 @@ export default function SessionCard({
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Language Banner */}
+      {session.spanishOnly ? (
+        <div className="bg-[#FFD600] text-black px-4 py-2 text-center font-semibold text-sm">
+          🌐 Spanish Only - Solo español (Translation Available)
+        </div>
+      ) : (
+        <div className="bg-gray-100 text-gray-700 px-4 py-2 text-center font-medium text-sm">
+          English Only - Spanish translation available in sessions 12:45 PM & 1:15 PM
+        </div>
+      )}
+
       {/* Session Header */}
       <div
         className="p-4 cursor-pointer active:bg-gray-50"
@@ -74,9 +85,9 @@ export default function SessionCard({
               <span className={`font-semibold ${getCapacityColor()}`}>
                 {session.employees.length}/{session.maxCapacity} registered
               </span>
-              {hasSpanishSpeakers && (
-                <span className="text-xs bg-[#FFD600] text-black px-2 py-1 rounded font-medium">
-                  🌐 Translator needed
+              {hasSpanishSpeakers && !session.spanishOnly && (
+                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-medium">
+                  ⚠️ No translator
                 </span>
               )}
             </div>
