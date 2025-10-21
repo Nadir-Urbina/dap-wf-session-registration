@@ -12,7 +12,17 @@ export async function PUT(
 ) {
   try {
     const { sessionId, employeeId } = await context.params;
-    const updatedEmployee: Omit<Employee, 'id'> = await request.json();
+    const body = await request.json();
+    const { password, ...updatedEmployee } = body as Omit<Employee, 'id'> & { password?: string };
+
+    // Verify password
+    const internalPassword = process.env.INTERNAL_PWD;
+    if (!password || password !== internalPassword) {
+      return NextResponse.json(
+        { error: 'Invalid password' },
+        { status: 401 }
+      );
+    }
 
     const data = await readSessionsData();
     const session = data.sessions.find(s => s.id === sessionId);
@@ -55,6 +65,16 @@ export async function DELETE(
 ) {
   try {
     const { sessionId, employeeId } = await context.params;
+
+    // Verify password from request header
+    const password = request.headers.get('x-admin-password');
+    const internalPassword = process.env.INTERNAL_PWD;
+    if (!password || password !== internalPassword) {
+      return NextResponse.json(
+        { error: 'Invalid password' },
+        { status: 401 }
+      );
+    }
 
     const data = await readSessionsData();
     const session = data.sessions.find(s => s.id === sessionId);

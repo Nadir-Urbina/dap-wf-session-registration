@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { SessionsData, Employee } from '@/types';
 import SessionCard from '@/components/SessionCard';
 import EmployeeForm from '@/components/EmployeeForm';
+import PasswordPrompt from '@/components/PasswordPrompt';
 
 export default function Home() {
   const [data, setData] = useState<SessionsData | null>(null);
@@ -11,6 +12,10 @@ export default function Home() {
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | null>(null);
+  const [pendingDeleteData, setPendingDeleteData] = useState<{ sessionId: string; employeeId: string } | null>(null);
+  const [pendingEditData, setPendingEditData] = useState<Omit<Employee, 'id'> | null>(null);
 
   useEffect(() => {
     fetchSessions();
@@ -40,21 +45,38 @@ export default function Home() {
     setShowForm(true);
   };
 
-  const handleDeleteEmployee = async (sessionId: string, employeeId: string) => {
+  const handleDeleteEmployee = (sessionId: string, employeeId: string) => {
     if (!confirm('Are you sure you want to remove this employee from the session?')) {
       return;
     }
 
+    // Show password prompt
+    setPendingDeleteData({ sessionId, employeeId });
+    setPasswordAction('delete');
+    setShowPasswordPrompt(true);
+  };
+
+  const executeDelete = async (password: string) => {
+    if (!pendingDeleteData) return;
+
     try {
       const response = await fetch(
-        `/api/sessions/${sessionId}/employees/${employeeId}`,
-        { method: 'DELETE' }
+        `/api/sessions/${pendingDeleteData.sessionId}/employees/${pendingDeleteData.employeeId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'x-admin-password': password,
+          },
+        }
       );
 
       if (response.ok) {
         await fetchSessions();
+        setShowPasswordPrompt(false);
+        setPendingDeleteData(null);
       } else {
-        alert('Failed to delete employee');
+        const error = await response.json();
+        alert(error.error || 'Invalid password or failed to delete employee');
       }
     } catch (error) {
       console.error('Error deleting employee:', error);
@@ -65,30 +87,24 @@ export default function Home() {
   const handleFormSubmit = async (employeeData: Omit<Employee, 'id'>) => {
     if (!selectedSession) return;
 
-    try {
-      let response;
+    // If editing, show password prompt
+    if (editingEmployee) {
+      setPendingEditData(employeeData);
+      setPasswordAction('edit');
+      setShowPasswordPrompt(true);
+      return;
+    }
 
-      if (editingEmployee) {
-        // Update existing employee
-        response = await fetch(
-          `/api/sessions/${selectedSession}/employees/${editingEmployee.id}`,
-          {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(employeeData),
-          }
-        );
-      } else {
-        // Add new employee
-        response = await fetch(
-          `/api/sessions/${selectedSession}/employees`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(employeeData),
-          }
-        );
-      }
+    // For new employees, no password required
+    try {
+      const response = await fetch(
+        `/api/sessions/${selectedSession}/employees`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(employeeData),
+        }
+      );
 
       if (response.ok) {
         await fetchSessions();
@@ -105,10 +121,55 @@ export default function Home() {
     }
   };
 
+  const executeEdit = async (password: string) => {
+    if (!pendingEditData || !selectedSession || !editingEmployee) return;
+
+    try {
+      const response = await fetch(
+        `/api/sessions/${selectedSession}/employees/${editingEmployee.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...pendingEditData, password }),
+        }
+      );
+
+      if (response.ok) {
+        await fetchSessions();
+        setShowForm(false);
+        setEditingEmployee(null);
+        setSelectedSession(null);
+        setShowPasswordPrompt(false);
+        setPendingEditData(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Invalid password or failed to update employee');
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      alert('Failed to update employee');
+    }
+  };
+
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingEmployee(null);
     setSelectedSession(null);
+  };
+
+  const handlePasswordConfirm = (password: string) => {
+    if (passwordAction === 'delete') {
+      executeDelete(password);
+    } else if (passwordAction === 'edit') {
+      executeEdit(password);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordPrompt(false);
+    setPasswordAction(null);
+    setPendingDeleteData(null);
+    setPendingEditData(null);
   };
 
   if (loading) {
@@ -160,6 +221,15 @@ export default function Home() {
           onCancel={handleFormCancel}
         />
       )}
+
+      {/* Password Prompt Modal */}
+      <PasswordPrompt
+        isOpen={showPasswordPrompt}
+        onConfirm={handlePasswordConfirm}
+        onClose={handlePasswordCancel}
+        title="Admin Password Required"
+        message={`Please enter the admin password to ${passwordAction === 'delete' ? 'remove' : 'edit'} this employee:`}
+      />
     </div>
   );
 }
