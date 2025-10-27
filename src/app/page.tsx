@@ -5,6 +5,7 @@ import { SessionsData, Employee } from '@/types';
 import SessionCard from '@/components/SessionCard';
 import EmployeeForm from '@/components/EmployeeForm';
 import PasswordPrompt from '@/components/PasswordPrompt';
+import Link from 'next/link';
 
 export default function Home() {
   const [data, setData] = useState<SessionsData | null>(null);
@@ -195,6 +196,14 @@ export default function Home() {
         <div className="text-2xl font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
         <h1 className="text-xl font-bold text-center">{data.eventTitle}</h1>
         <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
+        <div className="flex justify-center mt-3">
+          <Link
+            href="/biometrics"
+            className="px-4 py-2 bg-[#FFD600] text-black rounded font-semibold hover:bg-[#FFD600]/90 transition-colors"
+          >
+            Biometric Exams Registration
+          </Link>
+        </div>
       </header>
 
       {/* Main Content */}
