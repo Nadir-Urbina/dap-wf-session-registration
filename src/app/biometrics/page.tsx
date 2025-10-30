@@ -55,7 +55,14 @@ export default function BiometricsPage() {
       if (!data) return;
 
       // Prepare data for Excel
-      const excelData: any[] = [];
+      const excelData: Array<{
+        'Session Time': string;
+        'First Name': string;
+        'Last Name': string;
+        'Email': string;
+        'Phone': string;
+        'Date of Birth': string;
+      }> = [];
 
       data.sessions.forEach((session) => {
         session.registrations.forEach((registration) => {

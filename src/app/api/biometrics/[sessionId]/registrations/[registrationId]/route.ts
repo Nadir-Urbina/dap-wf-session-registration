@@ -39,6 +39,7 @@ export async function PUT(
     }
 
     // Update registration (excluding password from the saved data)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...registrationData } = body;
     session.registrations[registrationIndex] = {
       ...registrationData,

@@ -199,7 +199,14 @@ export default function Home() {
       if (!data) return;
 
       // Prepare data for Excel
-      const excelData: any[] = [];
+      const excelData: Array<{
+        'Session Time': string;
+        'Full Name': string;
+        'Email': string;
+        'Phone': string;
+        'Primary Language': string;
+        'Spanish Only Session': string;
+      }> = [];
 
       data.sessions.forEach((session) => {
         session.employees.forEach((employee) => {

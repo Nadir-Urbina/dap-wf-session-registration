@@ -13,7 +13,6 @@ function generateBiometricSessions() {
 
   let currentHour = startHour;
   let currentMinute = startMinute;
-  let sessionNumber = 1;
 
   while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
     const hour12 = currentHour > 12 ? currentHour - 12 : currentHour;
@@ -34,8 +33,6 @@ function generateBiometricSessions() {
       currentMinute = 0;
       currentHour += 1;
     }
-
-    sessionNumber++;
   }
 
   return sessions;

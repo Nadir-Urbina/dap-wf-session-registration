@@ -36,7 +36,7 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
     });
   };
 
-  const maskDOB = (dob: string) => {
+  const maskDOB = () => {
     return '**/**/****';
   };
 
@@ -214,7 +214,7 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
                       {isRevealed ? registration.phone : maskPhone(registration.phone)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      DOB: {isRevealed ? registration.dateOfBirth : maskDOB(registration.dateOfBirth)}
+                      DOB: {isRevealed ? registration.dateOfBirth : maskDOB()}
                     </p>
                   </div>
                   <div className="flex gap-2">
