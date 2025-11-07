@@ -272,12 +272,24 @@ export default function Home() {
         <div className="text-2xl font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
         <h1 className="text-xl font-bold text-center">{data.eventTitle}</h1>
         <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
-        <div className="flex justify-center gap-3 mt-3">
+        <div className="flex justify-center gap-3 mt-3 flex-wrap">
           <Link
             href="/biometrics"
             className="px-4 py-2 bg-[#FFD600] text-black rounded font-semibold hover:bg-[#FFD600]/90 transition-colors"
           >
             Biometric Exams Registration
+          </Link>
+          <Link
+            href="/employees"
+            className="px-4 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Manage Employees
+          </Link>
+          <Link
+            href="/checkin"
+            className="px-4 py-2 bg-purple-600 text-white rounded font-semibold hover:bg-purple-700 transition-colors"
+          >
+            Check-In
           </Link>
           <button
             onClick={handleDownloadClick}
