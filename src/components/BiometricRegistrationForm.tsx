@@ -133,60 +133,48 @@ export default function BiometricRegistrationForm({
       dateOfBirth: formData.dateOfBirth
     };
 
-    // If editing, show password prompt
-    if (registration) {
-      setPendingData(registrationData);
-      setShowPasswordPrompt(true);
-      return;
-    }
-
-    // For new registrations, no password required
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`/api/biometrics/${sessionId}/registrations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registrationData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to register');
-      }
-
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Error submitting registration:', error);
-      setErrors({ submit: error instanceof Error ? error.message : 'Failed to register' });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Always show password prompt (for both new and edit)
+    setPendingData(registrationData);
+    setShowPasswordPrompt(true);
   };
 
   const handlePasswordConfirm = async (password: string) => {
-    if (!pendingData || !registration) return;
+    if (!pendingData) return;
 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        `/api/biometrics/${sessionId}/registrations/${registration.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ ...pendingData, password })
-        }
-      );
+      let response;
+
+      if (registration) {
+        // Update existing registration
+        response = await fetch(
+          `/api/biometrics/${sessionId}/registrations/${registration.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ...pendingData, password })
+          }
+        );
+      } else {
+        // Create new registration
+        response = await fetch(
+          `/api/biometrics/${sessionId}/registrations`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ...pendingData, password })
+          }
+        );
+      }
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update registration');
+        throw new Error(error.error || `Failed to ${registration ? 'update' : 'create'} registration`);
       }
 
       setShowPasswordPrompt(false);
@@ -194,8 +182,8 @@ export default function BiometricRegistrationForm({
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Error updating registration:', error);
-      setErrors({ submit: error instanceof Error ? error.message : 'Failed to update registration' });
+      console.error(`Error ${registration ? 'updating' : 'creating'} registration:`, error);
+      setErrors({ submit: error instanceof Error ? error.message : `Failed to ${registration ? 'update' : 'create'} registration` });
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -336,7 +324,7 @@ export default function BiometricRegistrationForm({
           setPendingData(null);
         }}
         title="Admin Password Required"
-        message="Please enter the admin password to update this registration:"
+        message={`Please enter the admin password to ${registration ? 'update' : 'create'} this registration:`}
       />
     </>
   );

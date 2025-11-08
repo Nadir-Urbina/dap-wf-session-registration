@@ -8,7 +8,16 @@ export async function POST(
 ) {
   try {
     const { sessionId } = await params;
-    const registration: Omit<BiometricRegistration, 'id'> = await request.json();
+    const body = await request.json();
+    const { password, ...registration }: { password?: string } & Omit<BiometricRegistration, 'id'> = body;
+
+    // Validate password
+    if (!password || password !== process.env.INTERNAL_PWD) {
+      return NextResponse.json(
+        { error: 'Invalid or missing password' },
+        { status: 401 }
+      );
+    }
 
     const data = await readBiometricsData();
     const sessionIndex = data.sessions.findIndex(s => s.id === sessionId);

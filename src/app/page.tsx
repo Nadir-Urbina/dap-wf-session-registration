@@ -15,9 +15,10 @@ export default function Home() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | null>(null);
+  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | 'add' | null>(null);
   const [pendingDeleteData, setPendingDeleteData] = useState<{ sessionId: string; employeeId: string } | null>(null);
   const [pendingEditData, setPendingEditData] = useState<Omit<Employee, 'id'> | null>(null);
+  const [pendingAddData, setPendingAddData] = useState<Omit<Employee, 'id'> | null>(null);
   const [showDownloadPasswordPrompt, setShowDownloadPasswordPrompt] = useState(false);
 
   useEffect(() => {
@@ -98,14 +99,22 @@ export default function Home() {
       return;
     }
 
-    // For new employees, no password required
+    // For new employees, also require password
+    setPendingAddData(employeeData);
+    setPasswordAction('add');
+    setShowPasswordPrompt(true);
+  };
+
+  const executeAdd = async (password: string) => {
+    if (!pendingAddData || !selectedSession) return;
+
     try {
       const response = await fetch(
         `/api/sessions/${selectedSession}/employees`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(employeeData),
+          body: JSON.stringify({ ...pendingAddData, password }),
         }
       );
 
@@ -114,13 +123,15 @@ export default function Home() {
         setShowForm(false);
         setEditingEmployee(null);
         setSelectedSession(null);
+        setShowPasswordPrompt(false);
+        setPendingAddData(null);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to save employee');
+        alert(error.error || 'Invalid password or failed to add employee');
       }
     } catch (error) {
-      console.error('Error saving employee:', error);
-      alert('Failed to save employee');
+      console.error('Error adding employee:', error);
+      alert('Failed to add employee');
     }
   };
 
@@ -165,6 +176,8 @@ export default function Home() {
       executeDelete(password);
     } else if (passwordAction === 'edit') {
       executeEdit(password);
+    } else if (passwordAction === 'add') {
+      executeAdd(password);
     }
   };
 
@@ -173,6 +186,7 @@ export default function Home() {
     setPasswordAction(null);
     setPendingDeleteData(null);
     setPendingEditData(null);
+    setPendingAddData(null);
   };
 
   const handleDownloadClick = () => {
@@ -334,7 +348,7 @@ export default function Home() {
         onConfirm={handlePasswordConfirm}
         onClose={handlePasswordCancel}
         title="Admin Password Required"
-        message={`Please enter the admin password to ${passwordAction === 'delete' ? 'remove' : 'edit'} this employee:`}
+        message={`Please enter the admin password to ${passwordAction === 'delete' ? 'remove' : passwordAction === 'edit' ? 'edit' : 'add'} this employee:`}
       />
 
       {/* Download Password Prompt */}

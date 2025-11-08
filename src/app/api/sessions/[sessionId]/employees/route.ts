@@ -12,7 +12,16 @@ export async function POST(
 ) {
   try {
     const { sessionId } = await context.params;
-    const employee: Omit<Employee, 'id'> = await request.json();
+    const body = await request.json();
+    const { password, ...employee }: { password?: string } & Omit<Employee, 'id'> = body;
+
+    // Validate password
+    if (!password || password !== process.env.INTERNAL_PWD) {
+      return NextResponse.json(
+        { error: 'Invalid or missing password' },
+        { status: 401 }
+      );
+    }
 
     const data = await readSessionsData();
     const session = data.sessions.find(s => s.id === sessionId);
