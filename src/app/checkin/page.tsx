@@ -22,6 +22,7 @@ export default function CheckInPage() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [allCheckIns, setAllCheckIns] = useState<CheckIn[]>([]);
   const [recentCheckIns, setRecentCheckIns] = useState<CheckIn[]>([]);
 
   useEffect(() => {
@@ -33,10 +34,13 @@ export default function CheckInPage() {
       const response = await fetch('/api/checkins');
       if (response.ok) {
         const checkIns = await response.json();
-        // Sort by check-in time (most recent first) and take top 10
+        // Sort by check-in time (most recent first)
         const sorted = checkIns.sort((a: CheckIn, b: CheckIn) =>
           new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()
         );
+        // Store all check-ins for statistics and export
+        setAllCheckIns(sorted);
+        // Keep only top 10 for display
         setRecentCheckIns(sorted.slice(0, 10));
       }
     } catch (error) {
@@ -263,6 +267,56 @@ export default function CheckInPage() {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  const exportToCSV = () => {
+    if (allCheckIns.length === 0) {
+      alert('No check-ins to export');
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Employee Name', 'Check-In Time', 'Food Tickets', 'Notes'];
+    const rows = allCheckIns.map(checkIn => [
+      checkIn.employeeName,
+      new Date(checkIn.checkInTime).toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }),
+      checkIn.foodTickets.toString(),
+      checkIn.notes || ''
+    ]);
+
+    // Escape CSV values (handle commas and quotes)
+    const escapeCSV = (value: string) => {
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `check-ins-${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -497,22 +551,36 @@ export default function CheckInPage() {
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm text-gray-600">Total Check-Ins</div>
-            <div className="text-2xl font-bold text-gray-900">{recentCheckIns.length}</div>
+            <div className="text-2xl font-bold text-gray-900">{allCheckIns.length}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm text-gray-600">Total Food Tickets</div>
             <div className="text-2xl font-bold text-blue-600">
-              {recentCheckIns.reduce((sum, checkIn) => sum + checkIn.foodTickets, 0)}
+              {allCheckIns.reduce((sum, checkIn) => sum + checkIn.foodTickets, 0)}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm text-gray-600">Latest Check-In</div>
             <div className="text-lg font-bold text-gray-900">
-              {recentCheckIns.length > 0
-                ? formatDateTime(recentCheckIns[0].checkInTime)
+              {allCheckIns.length > 0
+                ? formatDateTime(allCheckIns[0].checkInTime)
                 : '-'}
             </div>
           </div>
+        </div>
+
+        {/* Export Button */}
+        <div className="mt-6">
+          <button
+            onClick={exportToCSV}
+            disabled={allCheckIns.length === 0}
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export All Check-Ins to CSV ({allCheckIns.length})
+          </button>
         </div>
       </div>
     </div>
