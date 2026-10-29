@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { readBiometricsData, writeBiometricsData } from '@/lib/biometricsData';
 import { BiometricRegistration } from '@/types/biometrics';
+import { hasBiometricsAccess } from '@/lib/biometricsAuth';
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    if (!hasBiometricsAccess(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { sessionId } = await params;
     const body = await request.json();
-    // Registration is open to employees (no password required)
     const registration: Omit<BiometricRegistration, 'id'> = body;
 
     const data = await readBiometricsData();

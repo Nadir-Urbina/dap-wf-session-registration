@@ -26,7 +26,7 @@ export default function SessionCard({
 
   const maskEmail = (email: string) => {
     const [username, domain] = email.split('@');
-    return `${username.slice(0, 2)}${'*'.repeat(username.length - 2)}@${domain}`;
+    return `${username.slice(0, 2)}${'*'.repeat(Math.max(0, username.length - 2))}@${domain}`;
   };
 
   const maskPhone = (phone: string) => {
@@ -117,7 +117,7 @@ export default function SessionCard({
         </div>
       ) : (
         <div className="bg-gray-100 text-gray-700 px-4 py-2 text-center font-medium text-sm">
-          English Only - Spanish translation available in sessions 12:45 PM & 1:15 PM
+          English Only - Spanish translation available in sessions 1:00 PM & 1:30 PM
         </div>
       )}
 

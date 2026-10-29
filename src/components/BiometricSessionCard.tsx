@@ -3,29 +3,26 @@
 import { useState } from 'react';
 import { BiometricSession, BiometricRegistration } from '@/types/biometrics';
 import BiometricRegistrationForm from './BiometricRegistrationForm';
-import PasswordPrompt from './PasswordPrompt';
-import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
+import { BIOMETRICS_PASSWORD_HEADER } from '@/lib/biometricsAuth';
 
 interface BiometricSessionCardProps {
   session: BiometricSession;
+  password: string;
   onUpdate: () => void;
 }
 
-export default function BiometricSessionCard({ session, onUpdate }: BiometricSessionCardProps) {
+export default function BiometricSessionCard({ session, password, onUpdate }: BiometricSessionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState<BiometricRegistration | null>(null);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [registrationToDelete, setRegistrationToDelete] = useState<string | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [showRevealPasswordPrompt, setShowRevealPasswordPrompt] = useState(false);
 
   const availableSpots = session.maxCapacity - session.registrations.length;
   const isFull = availableSpots === 0;
 
   const maskEmail = (email: string) => {
     const [username, domain] = email.split('@');
-    return `${username.slice(0, 2)}${'*'.repeat(username.length - 2)}@${domain}`;
+    return `${username.slice(0, 2)}${'*'.repeat(Math.max(0, username.length - 2))}@${domain}`;
   };
 
   const maskPhone = (phone: string) => {
@@ -53,58 +50,16 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
     setShowForm(true);
   };
 
-  const handleRemoveClick = (registrationId: string) => {
-    setRegistrationToDelete(registrationId);
-    setShowPasswordPrompt(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingRegistration(null);
-  };
-
-  const handleRevealToggle = () => {
-    if (isRevealed) {
-      setIsRevealed(false);
-    } else {
-      setShowRevealPasswordPrompt(true);
-    }
-  };
-
-  const handleRevealPasswordConfirm = async (password: string) => {
-    try {
-      const response = await fetch('/api/validate-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password })
-      });
-
-      const data = await response.json();
-
-      if (data.valid) {
-        setIsRevealed(true);
-        setShowRevealPasswordPrompt(false);
-      } else {
-        throw new Error('Invalid password');
-      }
-    } catch (error) {
-      console.error('Error validating password:', error);
-      throw new Error('Invalid password');
-    }
-  };
-
-  const handlePasswordSubmit = async (password: string) => {
-    if (!registrationToDelete) return;
+  const handleRemoveClick = async (registrationId: string) => {
+    if (!confirm('Are you sure you want to remove this registration?')) return;
 
     try {
       const response = await fetch(
-        `/api/biometrics/${session.id}/registrations/${registrationToDelete}`,
+        `/api/biometrics/${session.id}/registrations/${registrationId}`,
         {
           method: 'DELETE',
           headers: {
-            'x-admin-password': password
+            [BIOMETRICS_PASSWORD_HEADER]: password
           }
         }
       );
@@ -114,13 +69,16 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
         throw new Error(error.error || 'Failed to remove registration');
       }
 
-      setShowPasswordPrompt(false);
-      setRegistrationToDelete(null);
       onUpdate();
     } catch (error) {
       console.error('Error removing registration:', error);
-      throw error;
+      alert(error instanceof Error ? error.message : 'Failed to remove registration');
     }
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingRegistration(null);
   };
 
   const generateEmailLink = () => {
@@ -161,7 +119,7 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
             {session.registrations.length > 0 && (
               <div className="flex gap-2 mb-4 items-center">
                 <button
-                  onClick={handleRevealToggle}
+                  onClick={() => setIsRevealed(!isRevealed)}
                   className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium flex items-center gap-2"
                   title={isRevealed ? 'Hide sensitive information' : 'Reveal sensitive information'}
                 >
@@ -258,6 +216,7 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
       {showForm && (
         <BiometricRegistrationForm
           sessionId={session.id}
+          password={password}
           registration={editingRegistration}
           onClose={handleFormClose}
           onSuccess={() => {
@@ -267,25 +226,6 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
         />
       )}
 
-      <PasswordPrompt
-        isOpen={showPasswordPrompt}
-        onConfirm={handlePasswordSubmit}
-        onClose={() => {
-          setShowPasswordPrompt(false);
-          setRegistrationToDelete(null);
-        }}
-        title="Admin Password Required"
-        message="Please enter the admin password to remove this registration:"
-        note={CHANGE_REQUEST_NOTE}
-      />
-
-      <PasswordPrompt
-        isOpen={showRevealPasswordPrompt}
-        onConfirm={handleRevealPasswordConfirm}
-        onClose={() => setShowRevealPasswordPrompt(false)}
-        title="Admin Password Required"
-        message="Please enter the admin password to reveal sensitive information:"
-      />
     </>
   );
 }

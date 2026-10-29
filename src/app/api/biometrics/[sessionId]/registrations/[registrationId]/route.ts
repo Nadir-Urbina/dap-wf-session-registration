@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readBiometricsData, writeBiometricsData } from '@/lib/biometricsData';
 import { BiometricRegistration } from '@/types/biometrics';
+import { hasBiometricsAccess } from '@/lib/biometricsAuth';
 
 export async function PUT(
   request: Request,
@@ -8,15 +9,11 @@ export async function PUT(
 ) {
   try {
     const { sessionId, registrationId } = await params;
-    const body: Omit<BiometricRegistration, 'id'> & { password: string } = await request.json();
-
-    // Verify password
-    if (!body.password || body.password !== process.env.INTERNAL_PWD) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!hasBiometricsAccess(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const body: Omit<BiometricRegistration, 'id'> = await request.json();
 
     const data = await readBiometricsData();
     const sessionIndex = data.sessions.findIndex(s => s.id === sessionId);
@@ -38,11 +35,8 @@ export async function PUT(
       );
     }
 
-    // Update registration (excluding password from the saved data)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...registrationData } = body;
     session.registrations[registrationIndex] = {
-      ...registrationData,
+      ...body,
       id: registrationId
     };
 
@@ -65,13 +59,8 @@ export async function DELETE(
   try {
     const { sessionId, registrationId } = await params;
 
-    // Verify password
-    const password = request.headers.get('x-admin-password');
-    if (!password || password !== process.env.INTERNAL_PWD) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!hasBiometricsAccess(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await readBiometricsData();

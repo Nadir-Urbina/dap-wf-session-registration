@@ -20,8 +20,11 @@ export default function Home() {
   const [pendingDeleteData, setPendingDeleteData] = useState<{ sessionId: string; employeeId: string } | null>(null);
   const [pendingEditData, setPendingEditData] = useState<Omit<Employee, 'id'> | null>(null);
   const [showDownloadPasswordPrompt, setShowDownloadPasswordPrompt] = useState(false);
+  // Admin links stay hidden from employees; admins open the page as /?admin
+  const [showAdminTools, setShowAdminTools] = useState(false);
 
   useEffect(() => {
+    setShowAdminTools(new URLSearchParams(window.location.search).has('admin'));
     fetchSessions();
   }, []);
 
@@ -281,35 +284,37 @@ export default function Home() {
         {data.eventDate && (
           <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
         )}
-        <div className="flex justify-center gap-3 mt-3 flex-wrap">
-          <Link
-            href="/biometrics"
-            className="px-4 py-2 bg-[#FFD600] text-black rounded font-semibold hover:bg-[#FFD600]/90 transition-colors"
-          >
-            Biometric Exams Registration
-          </Link>
-          <Link
-            href="/employees"
-            className="px-4 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Manage Employees
-          </Link>
-          <Link
-            href="/checkin"
-            className="px-4 py-2 bg-purple-600 text-white rounded font-semibold hover:bg-purple-700 transition-colors"
-          >
-            Check-In
-          </Link>
-          <button
-            onClick={handleDownloadClick}
-            className="px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            Download Excel
-          </button>
-        </div>
+        {showAdminTools && (
+          <div className="flex justify-center gap-3 mt-3 flex-wrap">
+            <Link
+              href="/biometrics"
+              className="px-4 py-2 bg-[#FFD600] text-black rounded font-semibold hover:bg-[#FFD600]/90 transition-colors"
+            >
+              Biometric Exams Registration
+            </Link>
+            <Link
+              href="/employees"
+              className="px-4 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Manage Employees
+            </Link>
+            <Link
+              href="/checkin"
+              className="px-4 py-2 bg-purple-600 text-white rounded font-semibold hover:bg-purple-700 transition-colors"
+            >
+              Check-In
+            </Link>
+            <button
+              onClick={handleDownloadClick}
+              className="px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Download Excel
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}

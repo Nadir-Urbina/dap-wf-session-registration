@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { BiometricRegistration } from '@/types/biometrics';
-import PasswordPrompt from './PasswordPrompt';
-import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
+import { BIOMETRICS_PASSWORD_HEADER } from '@/lib/biometricsAuth';
 
 interface BiometricRegistrationFormProps {
   sessionId: string;
+  password: string;
   registration?: BiometricRegistration | null;
   onClose: () => void;
   onSuccess: () => void;
@@ -14,6 +14,7 @@ interface BiometricRegistrationFormProps {
 
 export default function BiometricRegistrationForm({
   sessionId,
+  password,
   registration,
   onClose,
   onSuccess
@@ -27,8 +28,6 @@ export default function BiometricRegistrationForm({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [pendingData, setPendingData] = useState<Omit<BiometricRegistration, 'id'> | null>(null);
 
   useEffect(() => {
     if (registration) {
@@ -134,29 +133,10 @@ export default function BiometricRegistrationForm({
       dateOfBirth: formData.dateOfBirth
     };
 
-    // Editing needs the admin password; new registrations are open to employees
-    if (registration) {
-      setPendingData(registrationData);
-      setShowPasswordPrompt(true);
-      return;
-    }
-
-    try {
-      await submitRegistration(registrationData);
-    } catch {
-      // Error is already shown in the form
-    }
+    await submitRegistration(registrationData);
   };
 
-  const handlePasswordConfirm = async (password: string) => {
-    if (!pendingData) return;
-    await submitRegistration(pendingData, password);
-  };
-
-  const submitRegistration = async (
-    data: Omit<BiometricRegistration, 'id'>,
-    password?: string
-  ) => {
+  const submitRegistration = async (data: Omit<BiometricRegistration, 'id'>) => {
     setIsSubmitting(true);
 
     try {
@@ -169,9 +149,10 @@ export default function BiometricRegistrationForm({
           {
             method: 'PUT',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              [BIOMETRICS_PASSWORD_HEADER]: password
             },
-            body: JSON.stringify({ ...data, password })
+            body: JSON.stringify(data)
           }
         );
       } else {
@@ -181,7 +162,8 @@ export default function BiometricRegistrationForm({
           {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              [BIOMETRICS_PASSWORD_HEADER]: password
             },
             body: JSON.stringify(data)
           }
@@ -193,14 +175,11 @@ export default function BiometricRegistrationForm({
         throw new Error(error.error || `Failed to ${registration ? 'update' : 'create'} registration`);
       }
 
-      setShowPasswordPrompt(false);
-      setPendingData(null);
       onSuccess();
       onClose();
     } catch (error) {
       console.error(`Error ${registration ? 'updating' : 'creating'} registration:`, error);
       setErrors({ submit: error instanceof Error ? error.message : `Failed to ${registration ? 'update' : 'create'} registration` });
-      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -307,10 +286,6 @@ export default function BiometricRegistrationForm({
             )}
           </div>
 
-          <p className="text-sm text-gray-700 bg-yellow-50 border border-yellow-300 rounded-md p-3">
-            {CHANGE_REQUEST_NOTE}
-          </p>
-
           {errors.submit && (
             <p className="text-red-600 text-sm">{errors.submit}</p>
           )}
@@ -336,17 +311,6 @@ export default function BiometricRegistrationForm({
         </div>
       </div>
 
-      <PasswordPrompt
-        isOpen={showPasswordPrompt}
-        onConfirm={handlePasswordConfirm}
-        onClose={() => {
-          setShowPasswordPrompt(false);
-          setPendingData(null);
-        }}
-        title="Admin Password Required"
-        message="Please enter the admin password to update this registration:"
-        note={CHANGE_REQUEST_NOTE}
-      />
     </>
   );
 }
