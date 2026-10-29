@@ -5,49 +5,55 @@ const KV_KEY = 'sessions_data';
 
 // Initial data structure
 const initialData: SessionsData = {
-  eventDate: "November 8, 2025",
+  eventDate: "",
   eventTitle: "Employee Benefits",
   sessions: [
     {
-      id: "session-1015",
-      time: "10:15 AM",
+      id: "session-1000",
+      time: "10:00 AM",
       employees: [],
       maxCapacity: 10
     },
     {
-      id: "session-1045",
-      time: "10:45 AM",
+      id: "session-1030",
+      time: "10:30 AM",
       employees: [],
       maxCapacity: 10
     },
     {
-      id: "session-1115",
-      time: "11:15 AM",
+      id: "session-1100",
+      time: "11:00 AM",
       employees: [],
       maxCapacity: 10
     },
     {
-      id: "session-1145",
-      time: "11:45 AM",
+      id: "session-1130",
+      time: "11:30 AM",
       employees: [],
       maxCapacity: 10
     },
     {
-      id: "session-1215",
-      time: "12:15 PM",
+      id: "session-1200",
+      time: "12:00 PM",
       employees: [],
       maxCapacity: 10
     },
     {
-      id: "session-1245",
-      time: "12:45 PM",
+      id: "session-1230",
+      time: "12:30 PM",
+      employees: [],
+      maxCapacity: 10
+    },
+    {
+      id: "session-100",
+      time: "1:00 PM",
       employees: [],
       maxCapacity: 15,
       spanishOnly: true
     },
     {
-      id: "session-115",
-      time: "1:15 PM",
+      id: "session-130",
+      time: "1:30 PM",
       employees: [],
       maxCapacity: 15,
       spanishOnly: true

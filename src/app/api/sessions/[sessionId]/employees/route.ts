@@ -13,15 +13,8 @@ export async function POST(
   try {
     const { sessionId } = await context.params;
     const body = await request.json();
-    const { password, ...employee }: { password?: string } & Omit<Employee, 'id'> = body;
-
-    // Validate password
-    if (!password || password !== process.env.INTERNAL_PWD) {
-      return NextResponse.json(
-        { error: 'Invalid or missing password' },
-        { status: 401 }
-      );
-    }
+    // Registration is open to employees (no password required)
+    const employee: Omit<Employee, 'id'> = body;
 
     const data = await readSessionsData();
     const session = data.sessions.find(s => s.id === sessionId);

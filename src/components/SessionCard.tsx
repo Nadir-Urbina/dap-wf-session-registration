@@ -53,8 +53,7 @@ export default function SessionCard({
     const subject = encodeURIComponent('Employee Benefits Session - Starting Soon');
     const body = encodeURIComponent(
       `Hello,\n\nYour Employee Benefits information session is starting soon!\n\n` +
-      `Session Time: ${session.time}\n` +
-      `Date: November 8, 2025\n\n` +
+      `Session Time: ${session.time}\n\n` +
       `Please arrive a few minutes early. We look forward to seeing you!\n\n` +
       `Best regards,\nEvent Team`
     );

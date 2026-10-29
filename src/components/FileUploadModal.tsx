@@ -3,11 +3,12 @@
 import { useState } from 'react';
 
 interface FileUploadModalProps {
+  adminPassword: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function FileUploadModal({ onClose, onSuccess }: FileUploadModalProps) {
+export default function FileUploadModal({ adminPassword, onClose, onSuccess }: FileUploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,6 +49,9 @@ export default function FileUploadModal({ onClose, onSuccess }: FileUploadModalP
 
       const response = await fetch('/api/employees/upload', {
         method: 'POST',
+        headers: {
+          'x-admin-password': adminPassword,
+        },
         body: formData,
       });
 

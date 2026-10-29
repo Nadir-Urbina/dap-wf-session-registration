@@ -40,7 +40,7 @@ function generateBiometricSessions() {
 
 // Initial data structure
 const initialData: BiometricsData = {
-  eventDate: "November 8, 2025",
+  eventDate: "",
   eventTitle: "Biometric Exams",
   sessions: generateBiometricSessions()
 };

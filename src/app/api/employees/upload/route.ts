@@ -6,6 +6,15 @@ import * as XLSX from 'xlsx';
 // POST upload CSV/XLSX file
 export async function POST(request: Request) {
   try {
+    // Verify password from request header
+    const password = request.headers.get('x-admin-password');
+    if (!password || password !== process.env.INTERNAL_PWD) {
+      return NextResponse.json(
+        { error: 'Invalid or missing password' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -69,8 +78,9 @@ export async function POST(request: Request) {
     const hireDateIdx = headers.findIndex((h: string) =>
       h.includes('hire') && h.includes('date')
     );
+    // Matches "Employment Type" and the HR export's "Employement Type" spelling
     const employmentTypeIdx = headers.findIndex((h: string) =>
-      h.includes('employment') && h.includes('type')
+      h.includes('employ') && h.includes('type')
     );
     const phoneIdx = headers.findIndex((h: string) =>
       h.includes('phone')

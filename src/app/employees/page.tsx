@@ -16,6 +16,7 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function EmployeesPage() {
       const data = await response.json();
 
       if (data.valid) {
+        setAdminPassword(password);
         setIsAuthenticated(true);
         setShowPasswordPrompt(false);
       } else {
@@ -338,6 +340,7 @@ export default function EmployeesPage() {
       {/* File Upload Modal */}
       {isUploadModalOpen && (
         <FileUploadModal
+          adminPassword={adminPassword}
           onClose={() => setIsUploadModalOpen(false)}
           onSuccess={handleUploadSuccess}
         />

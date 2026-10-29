@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Employee, Session } from '@/types';
+import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
 
 interface EmployeeFormProps {
   employee: Employee | null;
@@ -212,11 +213,15 @@ export default function EmployeeForm({
                   ⚠️ Translation is not available for this session
                 </p>
                 <p className="text-xs text-orange-700 mt-1">
-                  Only the last 2 sessions (12:45 PM & 1:15 PM) will have Spanish translation available.
+                  Only the last 2 sessions (1:00 PM & 1:30 PM) will have Spanish translation available.
                 </p>
               </div>
             )}
           </div>
+
+          <p className="text-sm text-gray-700 bg-yellow-50 border border-yellow-300 rounded-lg p-3">
+            {CHANGE_REQUEST_NOTE}
+          </p>
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">

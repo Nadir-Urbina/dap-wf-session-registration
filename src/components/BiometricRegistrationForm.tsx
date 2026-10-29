@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BiometricRegistration } from '@/types/biometrics';
 import PasswordPrompt from './PasswordPrompt';
+import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
 
 interface BiometricRegistrationFormProps {
   sessionId: string;
@@ -133,14 +134,29 @@ export default function BiometricRegistrationForm({
       dateOfBirth: formData.dateOfBirth
     };
 
-    // Always show password prompt (for both new and edit)
-    setPendingData(registrationData);
-    setShowPasswordPrompt(true);
+    // Editing needs the admin password; new registrations are open to employees
+    if (registration) {
+      setPendingData(registrationData);
+      setShowPasswordPrompt(true);
+      return;
+    }
+
+    try {
+      await submitRegistration(registrationData);
+    } catch {
+      // Error is already shown in the form
+    }
   };
 
   const handlePasswordConfirm = async (password: string) => {
     if (!pendingData) return;
+    await submitRegistration(pendingData, password);
+  };
 
+  const submitRegistration = async (
+    data: Omit<BiometricRegistration, 'id'>,
+    password?: string
+  ) => {
     setIsSubmitting(true);
 
     try {
@@ -155,7 +171,7 @@ export default function BiometricRegistrationForm({
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ ...pendingData, password })
+            body: JSON.stringify({ ...data, password })
           }
         );
       } else {
@@ -167,7 +183,7 @@ export default function BiometricRegistrationForm({
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ ...pendingData, password })
+            body: JSON.stringify(data)
           }
         );
       }
@@ -291,6 +307,10 @@ export default function BiometricRegistrationForm({
             )}
           </div>
 
+          <p className="text-sm text-gray-700 bg-yellow-50 border border-yellow-300 rounded-md p-3">
+            {CHANGE_REQUEST_NOTE}
+          </p>
+
           {errors.submit && (
             <p className="text-red-600 text-sm">{errors.submit}</p>
           )}
@@ -324,7 +344,8 @@ export default function BiometricRegistrationForm({
           setPendingData(null);
         }}
         title="Admin Password Required"
-        message={`Please enter the admin password to ${registration ? 'update' : 'create'} this registration:`}
+        message="Please enter the admin password to update this registration:"
+        note={CHANGE_REQUEST_NOTE}
       />
     </>
   );

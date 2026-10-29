@@ -5,6 +5,7 @@ import { SessionsData, Employee } from '@/types';
 import SessionCard from '@/components/SessionCard';
 import EmployeeForm from '@/components/EmployeeForm';
 import PasswordPrompt from '@/components/PasswordPrompt';
+import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
 
@@ -15,10 +16,9 @@ export default function Home() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | 'add' | null>(null);
+  const [passwordAction, setPasswordAction] = useState<'edit' | 'delete' | null>(null);
   const [pendingDeleteData, setPendingDeleteData] = useState<{ sessionId: string; employeeId: string } | null>(null);
   const [pendingEditData, setPendingEditData] = useState<Omit<Employee, 'id'> | null>(null);
-  const [pendingAddData, setPendingAddData] = useState<Omit<Employee, 'id'> | null>(null);
   const [showDownloadPasswordPrompt, setShowDownloadPasswordPrompt] = useState(false);
 
   useEffect(() => {
@@ -99,14 +99,12 @@ export default function Home() {
       return;
     }
 
-    // For new employees, also require password
-    setPendingAddData(employeeData);
-    setPasswordAction('add');
-    setShowPasswordPrompt(true);
+    // New registrations are open to employees (no password)
+    await executeAdd(employeeData);
   };
 
-  const executeAdd = async (password: string) => {
-    if (!pendingAddData || !selectedSession) return;
+  const executeAdd = async (employeeData: Omit<Employee, 'id'>) => {
+    if (!selectedSession) return;
 
     try {
       const response = await fetch(
@@ -114,7 +112,7 @@ export default function Home() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...pendingAddData, password }),
+          body: JSON.stringify(employeeData),
         }
       );
 
@@ -123,11 +121,9 @@ export default function Home() {
         setShowForm(false);
         setEditingEmployee(null);
         setSelectedSession(null);
-        setShowPasswordPrompt(false);
-        setPendingAddData(null);
       } else {
         const error = await response.json();
-        alert(error.error || 'Invalid password or failed to add employee');
+        alert(error.error || 'Failed to add employee');
       }
     } catch (error) {
       console.error('Error adding employee:', error);
@@ -176,8 +172,6 @@ export default function Home() {
       executeDelete(password);
     } else if (passwordAction === 'edit') {
       executeEdit(password);
-    } else if (passwordAction === 'add') {
-      executeAdd(password);
     }
   };
 
@@ -186,7 +180,6 @@ export default function Home() {
     setPasswordAction(null);
     setPendingDeleteData(null);
     setPendingEditData(null);
-    setPendingAddData(null);
   };
 
   const handleDownloadClick = () => {
@@ -285,7 +278,9 @@ export default function Home() {
       <header className="bg-black text-[#FFD600] p-4 sticky top-0 z-10 shadow-md">
         <div className="text-2xl font-semibold text-center mb-2 tracking-wide">DUVAL ASPHALT</div>
         <h1 className="text-xl font-bold text-center">{data.eventTitle}</h1>
-        <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
+        {data.eventDate && (
+          <p className="text-sm text-center mt-1 text-[#FFD600]/80">{data.eventDate}</p>
+        )}
         <div className="flex justify-center gap-3 mt-3 flex-wrap">
           <Link
             href="/biometrics"
@@ -348,7 +343,8 @@ export default function Home() {
         onConfirm={handlePasswordConfirm}
         onClose={handlePasswordCancel}
         title="Admin Password Required"
-        message={`Please enter the admin password to ${passwordAction === 'delete' ? 'remove' : passwordAction === 'edit' ? 'edit' : 'add'} this employee:`}
+        message={`Please enter the admin password to ${passwordAction === 'delete' ? 'remove' : 'edit'} this employee:`}
+        note={CHANGE_REQUEST_NOTE}
       />
 
       {/* Download Password Prompt */}

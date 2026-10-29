@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BiometricSession, BiometricRegistration } from '@/types/biometrics';
 import BiometricRegistrationForm from './BiometricRegistrationForm';
 import PasswordPrompt from './PasswordPrompt';
+import { CHANGE_REQUEST_NOTE } from '@/lib/constants';
 
 interface BiometricSessionCardProps {
   session: BiometricSession;
@@ -275,6 +276,7 @@ export default function BiometricSessionCard({ session, onUpdate }: BiometricSes
         }}
         title="Admin Password Required"
         message="Please enter the admin password to remove this registration:"
+        note={CHANGE_REQUEST_NOTE}
       />
 
       <PasswordPrompt

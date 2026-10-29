@@ -8,6 +8,7 @@ interface PasswordPromptProps {
   onConfirm: (password: string) => void;
   title?: string;
   message?: string;
+  note?: string;
 }
 
 export default function PasswordPrompt({
@@ -16,6 +17,7 @@ export default function PasswordPrompt({
   onConfirm,
   title = 'Password Required',
   message = 'Please enter the admin password to continue:',
+  note,
 }: PasswordPromptProps) {
   const [password, setPassword] = useState('');
 
@@ -37,6 +39,11 @@ export default function PasswordPrompt({
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
         <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
         <p className="text-gray-600 mb-4">{message}</p>
+        {note && (
+          <p className="text-sm text-gray-700 bg-yellow-50 border border-yellow-300 rounded-md p-3 mb-4">
+            {note}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <input
