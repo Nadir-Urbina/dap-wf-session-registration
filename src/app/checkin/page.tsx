@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { EmployeeRecord, CheckIn } from '@/types/employee';
+import { EmployeeRecord, CheckIn, BBAttendance } from '@/types/employee';
 import debounce from 'lodash.debounce';
 import Link from 'next/link';
 
@@ -24,6 +24,8 @@ export default function CheckInPage() {
   const [success, setSuccess] = useState('');
   const [allCheckIns, setAllCheckIns] = useState<CheckIn[]>([]);
   const [recentCheckIns, setRecentCheckIns] = useState<CheckIn[]>([]);
+  // null = still checking; true/false = whether the selected employee attended a Friday Brown & Brown session
+  const [attendedFridayBB, setAttendedFridayBB] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchRecentCheckIns();
@@ -193,6 +195,22 @@ export default function CheckInPage() {
     }
   };
 
+  const checkFridayBBAttendance = async (employeeId: string) => {
+    setAttendedFridayBB(null);
+    try {
+      const response = await fetch('/api/bb-attendance');
+      if (response.ok) {
+        const attendees: BBAttendance[] = await response.json();
+        setAttendedFridayBB(attendees.some(a => a.employeeId === employeeId));
+      } else {
+        setAttendedFridayBB(false);
+      }
+    } catch (error) {
+      console.error('Failed to check Friday Brown & Brown attendance:', error);
+      setAttendedFridayBB(false);
+    }
+  };
+
   const handleSelectEmployee = (employee: EmployeeRecord) => {
     setSelectedEmployee(employee);
     setSearchQuery(`${employee.firstName} ${employee.lastName}`);
@@ -200,8 +218,9 @@ export default function CheckInPage() {
     setError('');
     setSuccess('');
 
-    // Fetch their scheduled sessions
+    // Fetch their scheduled sessions and Friday Brown & Brown attendance
     fetchEmployeeSessions(employee.email || '', employee.firstName, employee.lastName);
+    checkFridayBBAttendance(employee.id);
   };
 
   const handleCheckIn = async (e: React.FormEvent) => {
@@ -238,9 +257,15 @@ export default function CheckInPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`Successfully checked in ${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
+        const name = `${selectedEmployee.firstName} ${selectedEmployee.lastName}`;
+        setSuccess(
+          data.fridayBBAttended
+            ? `Successfully checked in ${name}. Remember to give them their raffle tickets (attended Friday Brown & Brown session).`
+            : `Successfully checked in ${name}`
+        );
         // Reset form
         setSelectedEmployee(null);
+        setAttendedFridayBB(null);
         setSearchQuery('');
         setFoodTickets('0');
         setNotes('');
@@ -276,7 +301,7 @@ export default function CheckInPage() {
     }
 
     // Create CSV content
-    const headers = ['Employee Name', 'Check-In Time', 'Food Tickets', 'Notes'];
+    const headers = ['Employee Name', 'Check-In Time', 'Food Tickets', 'Friday B&B (Raffle Tickets)', 'Notes'];
     const rows = allCheckIns.map(checkIn => [
       checkIn.employeeName,
       new Date(checkIn.checkInTime).toLocaleString('en-US', {
@@ -289,6 +314,7 @@ export default function CheckInPage() {
         hour12: false
       }),
       checkIn.foodTickets.toString(),
+      checkIn.fridayBBAttended ? 'Yes' : '',
       checkIn.notes || ''
     ]);
 
@@ -421,6 +447,20 @@ export default function CheckInPage() {
                       )}
                     </div>
 
+                    {/* Friday Brown & Brown raffle notice */}
+                    {attendedFridayBB === null ? (
+                      <div className="p-3 text-sm text-gray-600 bg-gray-50 rounded-lg">
+                        Checking Friday Brown &amp; Brown attendance...
+                      </div>
+                    ) : attendedFridayBB ? (
+                      <div className="p-4 bg-amber-100 border-4 border-amber-400 rounded-lg">
+                        <div className="text-lg font-bold text-amber-900">🎟️ Give raffle tickets now</div>
+                        <div className="text-sm text-amber-900">
+                          This employee attended a Brown &amp; Brown session on Friday.
+                        </div>
+                      </div>
+                    ) : null}
+
                     {/* Scheduled Sessions */}
                     <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
                       <h3 className="font-semibold text-green-900 mb-2">Scheduled Sessions</h3>
@@ -534,6 +574,11 @@ export default function CheckInPage() {
                         <span className="font-semibold">{checkIn.foodTickets}</span>
                         <span>food ticket{checkIn.foodTickets !== 1 ? 's' : ''}</span>
                       </div>
+                      {checkIn.fridayBBAttended && (
+                        <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-900">
+                          Raffle tickets (Friday B&amp;B)
+                        </span>
+                      )}
                     </div>
                     {checkIn.notes && (
                       <div className="mt-2 text-sm text-gray-600 italic">
@@ -548,7 +593,7 @@ export default function CheckInPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-sm text-gray-600">Total Check-Ins</div>
             <div className="text-2xl font-bold text-gray-900">{allCheckIns.length}</div>
@@ -557,6 +602,12 @@ export default function CheckInPage() {
             <div className="text-sm text-gray-600">Total Food Tickets</div>
             <div className="text-2xl font-bold text-blue-600">
               {allCheckIns.reduce((sum, checkIn) => sum + checkIn.foodTickets, 0)}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-600">Raffle Tickets Given (Friday B&amp;B)</div>
+            <div className="text-2xl font-bold text-amber-600">
+              {allCheckIns.filter(checkIn => checkIn.fridayBBAttended).length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">

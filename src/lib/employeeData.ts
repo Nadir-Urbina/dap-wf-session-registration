@@ -1,8 +1,9 @@
 import { kv } from '@vercel/kv';
-import { EmployeesData, CheckInsData } from '@/types/employee';
+import { EmployeesData, CheckInsData, BBAttendanceData } from '@/types/employee';
 
 const EMPLOYEES_KV_KEY = 'employees_data';
 const CHECKINS_KV_KEY = 'checkins_data';
+const BB_ATTENDANCE_KV_KEY = 'bb_friday_attendance';
 
 // Initial employee data structure
 const initialEmployeesData: EmployeesData = {
@@ -63,5 +64,25 @@ export async function writeCheckInsData(data: CheckInsData): Promise<void> {
   } catch (error) {
     console.error('Error writing check-ins data:', error);
     throw new Error('Failed to write check-ins data');
+  }
+}
+
+// Friday Brown & Brown session attendance
+export async function readBBAttendanceData(): Promise<BBAttendanceData> {
+  try {
+    const data = await kv.get<BBAttendanceData>(BB_ATTENDANCE_KV_KEY);
+    return data ?? { attendees: [] };
+  } catch (error) {
+    console.error('Error reading Brown & Brown attendance data:', error);
+    throw new Error('Failed to read Brown & Brown attendance data');
+  }
+}
+
+export async function writeBBAttendanceData(data: BBAttendanceData): Promise<void> {
+  try {
+    await kv.set(BB_ATTENDANCE_KV_KEY, data);
+  } catch (error) {
+    console.error('Error writing Brown & Brown attendance data:', error);
+    throw new Error('Failed to write Brown & Brown attendance data');
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { readCheckInsData, writeCheckInsData } from '@/lib/employeeData';
+import { readCheckInsData, writeCheckInsData, readBBAttendanceData } from '@/lib/employeeData';
 import { CheckIn } from '@/types/employee';
 
 // GET all check-ins
@@ -50,6 +50,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Employees who attended a Friday Brown & Brown session get their raffle tickets at check-in
+    const bbAttendance = await readBBAttendanceData();
+    const fridayBBAttended = bbAttendance.attendees.some(a => a.employeeId === employeeId);
+
     // Create new check-in
     const newCheckIn: CheckIn = {
       id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -57,7 +61,8 @@ export async function POST(request: Request) {
       employeeName,
       checkInTime: new Date().toISOString(),
       foodTickets: Number(foodTickets),
-      notes: notes?.trim() || undefined
+      notes: notes?.trim() || undefined,
+      ...(fridayBBAttended && { fridayBBAttended: true })
     };
 
     data.checkIns.push(newCheckIn);

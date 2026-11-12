@@ -304,6 +304,12 @@ export default function Home() {
             >
               Check-In
             </Link>
+            <Link
+              href="/bb-checkin"
+              className="px-4 py-2 bg-amber-500 text-black rounded font-semibold hover:bg-amber-600 transition-colors"
+            >
+              Friday B&amp;B Check-In
+            </Link>
             <button
               onClick={handleDownloadClick}
               className="px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
