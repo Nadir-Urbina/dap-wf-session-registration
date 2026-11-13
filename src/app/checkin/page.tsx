@@ -6,8 +6,8 @@ import debounce from 'lodash.debounce';
 import Link from 'next/link';
 
 interface SessionInfo {
-  benefitsSession?: string;
-  biometricsSession?: string;
+  benefitsSession: { time: string; spanishOnly: boolean } | null;
+  biometricsSession: { time: string } | null;
 }
 
 export default function CheckInPage() {
@@ -16,6 +16,7 @@ export default function CheckInPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeRecord | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const [sessionLookupFailed, setSessionLookupFailed] = useState(false);
   const [foodTickets, setFoodTickets] = useState('0');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -84,112 +85,23 @@ export default function CheckInPage() {
     debouncedSearch(query);
   };
 
-  // Helper function to check if names match based on first and last name components
-  const namesMatch = (registeredName: string, employeeFirstName: string, employeeLastName: string): boolean => {
-    if (!registeredName) {
-      console.log('      namesMatch: registeredName is empty');
-      return false;
-    }
-
-    const registered = registeredName.toLowerCase().trim();
-    const firstName = employeeFirstName.toLowerCase().trim();
-    const lastName = employeeLastName.toLowerCase().trim();
-
-    const hasFirstName = registered.includes(firstName);
-    const hasLastName = registered.includes(lastName);
-
-    console.log(`      namesMatch: "${registered}" vs "${firstName}" + "${lastName}"`);
-    console.log(`      Has first name: ${hasFirstName}, Has last name: ${hasLastName}`);
-
-    // Match if both first name and last name are present in the registered name
-    // This handles cases like "Nadir Brooks" matching "Nadir Urbina Brooks"
-    return hasFirstName && hasLastName;
-  };
-
-  const fetchEmployeeSessions = async (employeeEmail: string, employeeFirstName: string, employeeLastName: string) => {
+  // Looks up the employee's Brown & Brown session and biometrics appointment on the server
+  // (the biometrics list itself is password-protected, so the page can't read it directly)
+  const fetchEmployeeSessions = async (employeeId: string) => {
     setLoadingSessions(true);
     setSessionInfo(null);
-
-    console.log('=== Searching for sessions ===');
-    console.log('Employee Email:', employeeEmail);
-    console.log('Employee First Name:', employeeFirstName);
-    console.log('Employee Last Name:', employeeLastName);
+    setSessionLookupFailed(false);
 
     try {
-      // Fetch both benefits and biometrics sessions
-      const [benefitsResponse, biometricsResponse] = await Promise.all([
-        fetch('/api/sessions'),
-        fetch('/api/biometrics')
-      ]);
-
-      const info: SessionInfo = {};
-
-      // Check benefits sessions
-      if (benefitsResponse.ok) {
-        const benefitsData = await benefitsResponse.json();
-        console.log('Benefits sessions count:', benefitsData.sessions?.length || 0);
-        for (const session of benefitsData.sessions) {
-          const found = session.employees.find((emp: { email: string; fullName: string }) => {
-            const emailMatch = emp.email?.toLowerCase() === employeeEmail?.toLowerCase();
-            const nameMatch = namesMatch(emp.fullName, employeeFirstName, employeeLastName);
-            if (emailMatch || nameMatch) {
-              console.log('✓ Found in Benefits:', emp.fullName, 'Time:', session.time);
-            }
-            return emailMatch || nameMatch;
-          });
-          if (found) {
-            info.benefitsSession = session.time;
-            break;
-          }
-        }
+      const response = await fetch(`/api/checkin-lookup?employeeId=${encodeURIComponent(employeeId)}`);
+      if (response.ok) {
+        setSessionInfo(await response.json());
+      } else {
+        setSessionLookupFailed(true);
       }
-
-      // Check biometrics sessions
-      if (biometricsResponse.ok) {
-        const biometricsData = await biometricsResponse.json();
-        console.log('Biometrics sessions count:', biometricsData.sessions?.length || 0);
-
-        for (const session of biometricsData.sessions) {
-          console.log('Checking biometrics session:', session.time);
-          console.log('Session has registrations:', session.registrations?.length || 0);
-
-          if (session.registrations) {
-            // Log all registrations in this session
-            session.registrations.forEach((reg: { firstName: string; lastName: string; email: string }) => {
-              console.log('  - Registration:', `${reg.firstName} ${reg.lastName}`, '/', reg.email);
-            });
-          }
-
-          const found = session.registrations?.find((reg: { firstName: string; lastName: string; email: string }) => {
-            const emailMatch = reg.email?.toLowerCase() === employeeEmail?.toLowerCase();
-            const fullName = `${reg.firstName} ${reg.lastName}`;
-            const nameMatch = namesMatch(fullName, employeeFirstName, employeeLastName);
-
-            console.log('  Checking:', fullName);
-            console.log('    Email match:', emailMatch, `(${reg.email} vs ${employeeEmail})`);
-            console.log('    Name match:', nameMatch);
-
-            if (emailMatch || nameMatch) {
-              console.log('✓ Found in Biometrics:', fullName, 'Time:', session.time);
-            }
-
-            return emailMatch || nameMatch;
-          });
-
-          if (found) {
-            info.biometricsSession = session.time;
-            break;
-          }
-        }
-      }
-
-      console.log('=== Final result ===');
-      console.log('Benefits Session:', info.benefitsSession || 'Not found');
-      console.log('Biometrics Session:', info.biometricsSession || 'Not found');
-
-      setSessionInfo(info);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
+      setSessionLookupFailed(true);
     } finally {
       setLoadingSessions(false);
     }
@@ -219,7 +131,7 @@ export default function CheckInPage() {
     setSuccess('');
 
     // Fetch their scheduled sessions and Friday Brown & Brown attendance
-    fetchEmployeeSessions(employee.email || '', employee.firstName, employee.lastName);
+    fetchEmployeeSessions(employee.id);
     checkFridayBBAttendance(employee.id);
   };
 
@@ -463,46 +375,30 @@ export default function CheckInPage() {
 
                     {/* Scheduled Sessions */}
                     <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                      <h3 className="font-semibold text-green-900 mb-2">Scheduled Sessions</h3>
+                      <h3 className="font-semibold text-green-900 mb-2">Remind them of their appointments</h3>
                       {loadingSessions ? (
                         <div className="text-sm text-gray-600">Loading sessions...</div>
+                      ) : sessionLookupFailed ? (
+                        <div className="text-sm text-red-700">Couldn&apos;t load their sessions. Try selecting them again.</div>
                       ) : sessionInfo && (sessionInfo.benefitsSession || sessionInfo.biometricsSession) ? (
                         <div className="space-y-2">
                           {sessionInfo.benefitsSession && (
-                            <div className="flex items-start gap-2">
-                              <div className="flex-shrink-0 mt-0.5">
-                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-green-900">Benefits Session</div>
-                                <div className="text-sm text-green-700">Time: {sessionInfo.benefitsSession}</div>
-                              </div>
-                            </div>
+                            <SessionLine
+                              label="Brown & Brown Benefits Session"
+                              time={sessionInfo.benefitsSession.time}
+                              detail={sessionInfo.benefitsSession.spanishOnly ? 'Spanish session' : undefined}
+                            />
                           )}
                           {sessionInfo.biometricsSession && (
-                            <div className="flex items-start gap-2">
-                              <div className="flex-shrink-0 mt-0.5">
-                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-green-900">Biometrics Session</div>
-                                <div className="text-sm text-green-700">Time: {sessionInfo.biometricsSession}</div>
-                              </div>
-                            </div>
+                            <SessionLine label="Biometrics Appointment" time={sessionInfo.biometricsSession.time} />
                           )}
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <span>No sessions scheduled</span>
-                          </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <span>No sessions found for this employee</span>
                         </div>
                       )}
                     </div>
@@ -633,6 +529,21 @@ export default function CheckInPage() {
             Export All Check-Ins to CSV ({allCheckIns.length})
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SessionLine({ label, time, detail }: { label: string; time: string; detail?: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <div className="font-semibold text-green-900">{label}</div>
+        <div className="text-lg font-bold text-green-800">{time}</div>
+        {detail && <div className="text-sm text-green-700">{detail}</div>}
       </div>
     </div>
   );
